@@ -9,7 +9,7 @@ This mini competition is adapted from the Kaggle Rossman challenge.
 The install the necessary packages, run:
 ``` bash
 pip install -r requirements.txt
-``
+```
 
 To extract only the Training Data, run:
 ``` bash
@@ -52,3 +52,4 @@ Promo - indicates whether a store is running a promo on that day
 ```
 
 The test period is from 2014-08-01 to 2015-07-31 - the test dataset is the same format as train.csv.
+
