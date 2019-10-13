@@ -6,7 +6,7 @@ First Competition during the Data Science Retreat
 This mini competition is adapted from the Kaggle Rossman challenge. 
 
 ## Setup
-The install the necessary packages, run:
+To install the necessary packages, run:
 ``` 
 pip install -r requirements.txt
 ```
@@ -52,4 +52,16 @@ Promo - indicates whether a store is running a promo on that day
 ```
 
 The test period is from 2014-08-01 to 2015-07-31 - the test dataset is the same format as train.csv.
+
+## Task
+The task is to predict the Sales of a given store on a given day.
+Submissions are evaluated on the root mean square percentage error (RMSPE):
+
+![](./assets/rmspe.png)
+
+Zero sales days are ignored in scoring.
+
+The team scores will be ranked - the highest score (lowest RMSPE) will receive a score of 10 for the scoring criteria section.
+
+Each lower score (higher RMSPE) will receive a score of 10-(1 * number in ranking). If they are ranked second, score will be 10-2 = 8.
 
