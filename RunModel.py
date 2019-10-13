@@ -84,24 +84,12 @@ train_preds1 = xg_reg2.predict(X_train)
 val_preds1 = xg_reg2.predict(X_val)
 
 EPSILON = 1e-10
-def _error(actual: np.ndarray, predicted: np.ndarray):
-    """ Simple error """
-    return actual - predicted
-
-def _percentage_error(actual: np.ndarray, predicted: np.ndarray):
-    """
-    Percentage error
-    Note: result is NOT multiplied by 100
-    """
-    return _error(actual, predicted) / (actual + EPSILON)
 
 def rmspe(actual: np.ndarray, predicted: np.ndarray):
-    return np.sqrt(np.mean(np.square(_percentage_error(actual, predicted))))
+    return np.sqrt(np.mean(np.square((actual - predicted) / actual)))
 
-print("RMSE train: %f" % np.sqrt(mean_squared_error(y_train, train_preds1)))
-print("RMSE CV: %f" % np.sqrt(mean_squared_error(y_val, val_preds1)))
-print("RMSPE (CV): %f" % (rmspe(y_val,val_preds1)*100) +'%')
-print("RMSPE (train): %f" % (rmspe(y_train,train_preds1)*100) +'%')
+print("RMSE train: %f" % rmspe(y_train, train_preds1))
+print("RMSE CV: %f" % rmspe(y_val, val_preds1))
 
 with open('traindata/params.txt','w') as f:
     f.write(str(params1))

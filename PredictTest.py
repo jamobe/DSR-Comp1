@@ -36,7 +36,7 @@ X, y = test.iloc[:, :-1],test.iloc[:, -1]
 params1 = dictionary
 #xg_reg2 = xgb.XGBRegressor(**params1, n_estimators=500)
 #xg_reg2.fit(X, y)
-xgb = pickle.load(open("metadata/xgb_model.pickle.dat", "rb"))
+xgb = pickle.load(open("traindata/xgb_model.pickle.dat", "rb"))
 final_test_preds = xgb.predict(X)
 
 #####calculate test statistics
@@ -44,18 +44,14 @@ final_test_preds = xgb.predict(X)
 
 EPSILON = 1e-10
 
-
-def _error(actual: np.ndarray, predicted: np.ndarray):
-    """ Simple error """
-    return actual - predicted
-
-
-def _percentage_error(actual: np.ndarray, predicted: np.ndarray):
-    return _error(actual, predicted) / (actual + EPSILON)
-
-
 def rmspe(actual: np.ndarray, predicted: np.ndarray):
-    return np.sqrt(np.mean(np.square(_percentage_error(actual, predicted))))
+    return np.sqrt(np.mean(np.square((actual - predicted) / (actual + EPSILON))))
 
+def adam_metric(actuals, preds):
+    #preds = preds.reshape(-1)
+    #actuals = actuals.reshape(-1)
+    assert preds.shape == actuals.shape
+    return 100 * np.linalg.norm((actuals - preds) / (actuals + 1e-9)) / np.sqrt(preds.shape[0])
 
-print("RMSPE (test): %f" % (rmspe(y, final_test_preds) * 100) + '%')
+print("RMSPE (test): %f" %(rmspe(y, final_test_preds)))
+print("Adam's metric (test): %f" %(adam_metric(y, final_test_preds)))

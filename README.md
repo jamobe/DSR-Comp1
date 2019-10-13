@@ -1,5 +1,5 @@
 # DSR-Comp1
-First Competition during the Data Science Retreat
+First Competition during the Data Science Retreat (9.-11.Oct 2019)
 
 ## Rossman Kaggle Mini-Competition
 
