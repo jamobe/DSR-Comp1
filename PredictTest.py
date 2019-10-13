@@ -3,6 +3,7 @@ import helper as hlp
 import pandas as pd
 import numpy as np
 import xgboost as xgb
+import pickle
 
 with open("traindata/params.txt", "r") as data:
     dictionary = ast.literal_eval(data.read())
@@ -31,10 +32,12 @@ cols.pop(cols.index('Sales')) #Remove sales from list
 test = test[cols + ['Sales']] #Create new dataframe with sales right at the end
 X, y = test.iloc[:, :-1],test.iloc[:, -1]
 
+#df_DM = xgb.DMatrix(data=X, label=y)
 params1 = dictionary
-xg_reg2 = xgb.XGBRegressor(**params1, n_estimators=500)
-#xg_reg2.fit(X_train, y_train)
-final_test_preds = xg_reg2.predict(X)
+#xg_reg2 = xgb.XGBRegressor(**params1, n_estimators=500)
+#xg_reg2.fit(X, y)
+xgb = pickle.load(open("metadata/xgb_model.pickle.dat", "rb"))
+final_test_preds = xgb.predict(X)
 
 #####calculate test statistics
 

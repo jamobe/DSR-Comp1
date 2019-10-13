@@ -24,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--test', default=0, nargs='?')
     args = parser.parse_args()
 
-    with zipfile.ZipFile('./data/rossmann-store-sales.zip', 'r') as zip_ref:
+    with zipfile.ZipFile('./traindata/rossmann-store-sales.zip', 'r') as zip_ref:
         zip_ref.extractall('./data/raw')
 
     raw = pd.read_csv('./data/raw/train.csv', parse_dates=True)

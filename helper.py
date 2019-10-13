@@ -106,7 +106,7 @@ def MeanSales(df, type='Train'):
         df['ExpectedSales'] = df['Customers'] * df['Rel']
         with open('traindata/global_sales.txt') as f:
             global_sale = f.read()
-        df.loc[df['Rel'].isnull(), 'ExpectedSales'] = global_sale
+        df.loc[df['Rel'].isnull(), 'ExpectedSales'] = float(global_sale)
 
     df.drop({'StoreType', 'Assortment','StateHoliday', 'StoreInfo'}, axis=1, inplace=True)
 

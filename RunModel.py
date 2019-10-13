@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split as train_test_split
 from datetime import timedelta
 import datetime as dt
 from bayes_opt import BayesianOptimization
-
+import pickle
 
 df = pd.read_csv('data/CleanTrainData.csv',index_col=0)
 #Val = pd.read_csv('CheckValData.csv')
@@ -106,3 +106,6 @@ print("RMSPE (train): %f" % (rmspe(y_train,train_preds1)*100) +'%')
 with open('traindata/params.txt','w') as f:
     f.write(str(params1))
     f.close()
+
+# save model to file
+pickle.dump(xg_reg2, open("traindata/xgb_model.pickle.dat", "wb"))
