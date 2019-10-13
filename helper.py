@@ -37,16 +37,15 @@ def CompYear(df):
 # Calculate is Competition is active and how long the competition is active
 def CompAct(df):
     df['CompetitionActive'] = 0
+    df['CompetitionDays'] = 0
     df.loc[df['CompetitionStart'] <= df['Date'], 'CompetitionActive'] = 1
     df['CompetitionDays'] = (df['Date'] - df['CompetitionStart'])/np.timedelta64(1,'D')
     return df
 
 def PromoDur(df):
     # Convert Promoyear and Promoweekno to datetime format
-    df_subset = df.loc[(~df['Promo2SinceYear'].isnull()) & (~df['Promo2SinceWeek'].isnull()), \
-                       ['Promo2SinceYear','Promo2SinceWeek']]
+    df_subset = df.loc[(~df['Promo2SinceYear'].isnull()) & (~df['Promo2SinceWeek'].isnull()), ['Promo2SinceYear','Promo2SinceWeek']]
     df_subset = df_subset[['Promo2SinceYear','Promo2SinceWeek']].astype(int)
-    #df_subset = float_to_int(df_subset, {'Promo2SinceYear', 'Promo2SinceWeek'})
     df['PromoStart'] = df_subset.apply(lambda row: dt.datetime.strptime(f'{row.Promo2SinceYear} {row.Promo2SinceWeek} 1', '%G %V %u'), axis=1)
 
     # create PromoDuration Column:  Date - PromoStart
@@ -77,7 +76,6 @@ def RunPromo(df):
     for i in months_abbr:
         mask = (df['PromoInterval'].str.contains(i[1], na=False)) & (df['Month'] == i[0]) & (df['Promo2'] == 1)
         df.loc[mask, 'RunningPromo2'] = 1
-    df = df.drop({'Date', 'CompetitionStart', 'PromoStart'}, axis=1, errors='ignore')
     return df
 
 def CustImput(df):
@@ -102,14 +100,14 @@ def MeanSales(df, type='Train'):
         with open('traindata/global_sales.txt', 'w') as f:
             f.write(str(global_sales))
     else:
-        b = pd.read_csv('traindata/MeanSales.csv', header=None, index_col=False)
-        b = b.to_dict()
-        for idx, rows in df.iterrows():
-            if rows['StoreInfo'] in b.keys():
-                rows['Rel'] = b[rows['StoreInfo']]
-                rows['ExpectedSales'] = rows['Customers'] * rows['Rel']
-            else:
-                with open('traindata/global_sales.txt') as f:
-                    global_sale = f.read()
-                rows['ExpectedSales'] = global_sale
+        b = pd.read_csv('traindata/MeanSales.csv', header=None, names=['keys', 'values'])
+        mydict = dict(zip(b['keys'], b['values']))
+        df['Rel'] = df['StoreInfo'].map(mydict)
+        df['ExpectedSales'] = df['Customers'] * df['Rel']
+        with open('traindata/global_sales.txt') as f:
+            global_sale = f.read()
+        df.loc[df['Rel'].isnull(), 'ExpectedSales'] = global_sale
+
+    df.drop({'StoreType', 'Assortment','StateHoliday', 'StoreInfo'}, axis=1, inplace=True)
+
     return df
