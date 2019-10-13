@@ -47,9 +47,9 @@ EPSILON = 1e-10
 def rmspe(actual: np.ndarray, predicted: np.ndarray):
     return np.sqrt(np.mean(np.square((actual - predicted) / (actual + EPSILON))))
 
-def adam_metric(actuals, preds):
-    preds = preds.values.reshape(-1)
-    actuals = actuals.values.reshape(-1)
+def adam_metric(actual: np.ndarray, predicted: np.ndarray):
+    preds = predicted.reshape(-1)
+    actuals = actual.reshape(-1)
     assert preds.shape == actuals.shape
     return 100 * np.linalg.norm((actuals - preds) / (actuals + 1e-9)) / np.sqrt(preds.shape[0])
 

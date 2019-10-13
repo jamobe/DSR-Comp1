@@ -35,13 +35,14 @@ X_train, X_val, y_train, y_val = df_early.iloc[:,:-1], df_later.iloc[:,:-1], df_
 df_DM = xgb.DMatrix(data=X_train, label=y_train)
 
 params = {"objective":"reg:squarederror", #type of regressor, shouldnt change
-              'colsample_bytree': 0.627, #percentage of features used per tree. High value can lead to overfitting.
-              'learning_rate': 0.1, #step size shrinkage used to prevent overfitting. Range is [0,1]
-              'max_depth': 5, #determines how deeply each tree is allowed to grow during any boosting round. keep this low! this will blow up our variance if high
-              'lambda': 4.655, #L1 regularization on leaf weights. A large valupythone leads to more regularization. Could consider l2 euclidiean regularisation
-              'n_estimators': 1250, #number of trees you want to build.
-              'n_jobs': 4,#should optimise core usage on pc
-             'subsample':0.86}
+            'silent': False,
+            'colsample_bytree': 0.627, #percentage of features used per tree. High value can lead to overfitting.
+            'learning_rate': 0.05, #step size shrinkage used to prevent overfitting. Range is [0,1]
+            'max_depth': 5, #determines how deeply each tree is allowed to grow during any boosting round. keep this low! this will blow up our variance if high
+            'lambda': 4.655, #L1 regularization on leaf weights. A large valupythone leads to more regularization. Could consider l2 euclidiean regularisation
+            'n_estimators': 1250, #number of trees you want to build.
+            'n_jobs': 4,#should optimise core usage on pc
+            'subsample':0.86}
 
 #now we must instantiate the XGB regressor by calling XGB regressor CLASS from the XGBoost library, we must give it the hypter parameters as arguments
 xg_reg = xgb.XGBRegressor(**params)
@@ -53,11 +54,13 @@ preds_train = xg_reg.predict(X_train)
 
 def xgb_evaluate(max_depth, lambd, colsample_bytree, subsample):
     params1 = {'objective': 'reg:squarederror',
+               'silent': False,
                'max_depth': int(max_depth),
-               'learning_rate': 0.1,
+               'learning_rate': 0.05,
                'lambda': lambd,
                'subsample': subsample,
                'colsample_bytree': colsample_bytree,
+               #'n_estimators': 100,
                'n_jobs': 4}
     # Used around 1000 boosting rounds in the full model
     cv_result = xgb.cv(dtrain=df_DM, params=params1, num_boost_round=125, nfold=3, metrics='rmse', seed=42)
@@ -65,7 +68,7 @@ def xgb_evaluate(max_depth, lambd, colsample_bytree, subsample):
     return -1.0 * cv_result['test-rmse-mean'].iloc[-1]
 
 xgb_bo = BayesianOptimization(xgb_evaluate, {'max_depth': (3, 5),
-                                                 'lambd': (2, 6),
+                                                 'lambd': (0, 5),
                                                  'colsample_bytree': (0.3, 0.8),
                                                 'subsample': (0.8,1)})
 
