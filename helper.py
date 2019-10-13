@@ -1,0 +1,115 @@
+from datetime import date, datetime
+import numpy as np
+import pandas as pd
+import datetime as dt
+
+# Creates extra Columns: Year, Month, Week, Weekday, Day
+def date_convert(df):
+    if 'Date' in df.columns.tolist():
+        df.loc[:, 'Date'] = pd.to_datetime(df['Date'])
+
+        df['Year'] = df['Date'].dt.year
+        df['Quarter'] = df['Date'].dt.quarter
+        df['Month'] = df['Date'].dt.month
+        df['Week'] = df['Date'].dt.week
+        df['WeekDay'] = df['Date'].dt.weekday
+        df['Day'] = df['Date'].dt.day
+
+        # df = df.drop(axis=1, labels='Date')
+
+        cols_after = df.columns.tolist()[0:9]
+        cols_before = df.columns.tolist()[9:]
+        df = df.loc[:, cols_before + cols_after]
+
+    else:
+        raise ValueError('Date column is not found in df')
+
+    return df
+
+# Convert CompetitionYear and CompetitionMonth to datetime format
+def CompYear(df):
+    df['CompetitionStart'] = 'NaT'
+    mask = (~df['CompetitionOpenSinceYear'].isnull()) & (~df['CompetitionOpenSinceMonth'].isnull())
+    df['CompetitionStart'] = df.loc[mask, 'CompetitionOpenSinceYear'].astype(int).astype(str) + '-' + df.loc[mask, 'CompetitionOpenSinceMonth'].astype(int).astype(str) + '-01'
+    df['CompetitionStart'] = pd.to_datetime(df['CompetitionStart'])
+    return df
+
+# Calculate is Competition is active and how long the competition is active
+def CompAct(df):
+    df['CompetitionActive'] = 0
+    df.loc[df['CompetitionStart'] <= df['Date'], 'CompetitionActive'] = 1
+    df['CompetitionDays'] = (df['Date'] - df['CompetitionStart'])/np.timedelta64(1,'D')
+    return df
+
+def PromoDur(df):
+    # Convert Promoyear and Promoweekno to datetime format
+    df_subset = df.loc[(~df['Promo2SinceYear'].isnull()) & (~df['Promo2SinceWeek'].isnull()), \
+                       ['Promo2SinceYear','Promo2SinceWeek']]
+    df_subset = df_subset[['Promo2SinceYear','Promo2SinceWeek']].astype(int)
+    #df_subset = float_to_int(df_subset, {'Promo2SinceYear', 'Promo2SinceWeek'})
+    df['PromoStart'] = df_subset.apply(lambda row: dt.datetime.strptime(f'{row.Promo2SinceYear} {row.Promo2SinceWeek} 1', '%G %V %u'), axis=1)
+
+    # create PromoDuration Column:  Date - PromoStart
+    df['PromoDuration'] = (df['Date'] - df['PromoStart'])/np.timedelta64(1,'D')
+    df['PromoDuration'].fillna(0, inplace=True)
+    return df
+
+# Create RunnningAnyPromo Column
+def RunAnyPromo(df):
+    df['RunningAnyPromo'] = 0
+    months_abbr = []
+
+    for i in range(1,13):
+        months_abbr.append((i, date(2008, i, 1).strftime('%b')))
+
+    for i in months_abbr:
+        mask = (df['PromoInterval'].str.contains(i[1], na=False)) & (df['Month']==i[0]) & (df['Promo2']==1) | df['Promo']==1
+        df.loc[mask, 'RunningAnyPromo'] = 1
+    return df
+
+def RunPromo(df):
+    # Sets RunningPromo to 1 if Months in Substring of PromoIntervall and current month match
+    df['RunningPromo2'] = 0
+    months_abbr = []
+    for i in range(1, 13):
+        months_abbr.append((i, date(2008, i, 1).strftime('%b')))
+
+    for i in months_abbr:
+        mask = (df['PromoInterval'].str.contains(i[1], na=False)) & (df['Month'] == i[0]) & (df['Promo2'] == 1)
+        df.loc[mask, 'RunningPromo2'] = 1
+    df = df.drop({'Date', 'CompetitionStart', 'PromoStart'}, axis=1, errors='ignore')
+    return df
+
+def CustImput(df):
+    # Replace NaN in Customers with Mean(Customers), but if Store not open set Customers to 0
+    df['Customers'].fillna(df['Customers'].mean(), inplace=True)
+    df.loc[df['Open'] == 0, 'Customers'] = 0
+    return df
+
+# calculate mean sales per number of customers per each store type
+def MeanSales(df, type='Train'):
+    df['StoreInfo'] = df['Assortment'] + df['StoreType']
+    df['Rel'] = np.nan
+    df['ExpectedSales'] = np.nan
+    if type == 'Train':
+        mean_sales = df.loc[df.Sales > 0, ['Sales', 'Customers', 'StoreInfo']].groupby('StoreInfo').mean()
+        mean_sales['Rel'] = mean_sales['Sales'] / mean_sales['Customers']
+        b = mean_sales['Rel'].to_dict()
+        df['Rel'] = df['StoreInfo'].map(b)
+        mean_sales['Rel'].to_csv('traindata/MeanSales.csv', header=False)
+        df['ExpectedSales'] = df['Customers'] * df['Rel']
+        global_sales = np.mean(df['Sales'] / df['Customers'])
+        with open('traindata/global_sales.txt', 'w') as f:
+            f.write(str(global_sales))
+    else:
+        b = pd.read_csv('traindata/MeanSales.csv', header=None, index_col=False)
+        b = b.to_dict()
+        for idx, rows in df.iterrows():
+            if rows['StoreInfo'] in b.keys():
+                rows['Rel'] = b[rows['StoreInfo']]
+                rows['ExpectedSales'] = rows['Customers'] * rows['Rel']
+            else:
+                with open('traindata/global_sales.txt') as f:
+                    global_sale = f.read()
+                rows['ExpectedSales'] = global_sale
+    return df
