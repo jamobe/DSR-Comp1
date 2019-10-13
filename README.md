@@ -21,6 +21,11 @@ To extract the Test Data (after the competition), run:
 python data.py --test 1
 ```
 
+To test the model prediction on the testset, run
+```
+python predictTest.py
+```
+
 ## Data Set
 The dataset is consists of two CSV-Files
 
@@ -65,3 +70,4 @@ The team scores will be ranked - the highest score (lowest RMSPE) will receive a
 
 Each lower score (higher RMSPE) will receive a score of 10-(1 * number in ranking). If they are ranked second, score will be 10-2 = 8.
 
+## Workflow

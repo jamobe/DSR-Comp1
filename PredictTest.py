@@ -32,12 +32,12 @@ cols.pop(cols.index('Sales')) #Remove sales from list
 test = test[cols + ['Sales']] #Create new dataframe with sales right at the end
 X, y = test.iloc[:, :-1],test.iloc[:, -1]
 
-#df_DM = xgb.DMatrix(data=X, label=y)
+df_DM = xgb.DMatrix(data=X, label=y)
 params1 = dictionary
 #xg_reg2 = xgb.XGBRegressor(**params1, n_estimators=500)
 #xg_reg2.fit(X, y)
-xgb = pickle.load(open("traindata/xgb_model.pickle.dat", "rb"))
-final_test_preds = xgb.predict(X)
+xgb_model = pickle.load(open("traindata/xgb_model.pickle.dat", "rb"))
+final_test_preds = xgb_model.predict(X)
 
 #####calculate test statistics
 
@@ -48,8 +48,8 @@ def rmspe(actual: np.ndarray, predicted: np.ndarray):
     return np.sqrt(np.mean(np.square((actual - predicted) / (actual + EPSILON))))
 
 def adam_metric(actuals, preds):
-    #preds = preds.reshape(-1)
-    #actuals = actuals.reshape(-1)
+    preds = preds.values.reshape(-1)
+    actuals = actuals.values.reshape(-1)
     assert preds.shape == actuals.shape
     return 100 * np.linalg.norm((actuals - preds) / (actuals + 1e-9)) / np.sqrt(preds.shape[0])
 
