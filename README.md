@@ -7,17 +7,17 @@ This mini competition is adapted from the Kaggle Rossman challenge.
 
 ## Setup
 The install the necessary packages, run:
-``` bash
+``` 
 pip install -r requirements.txt
 ```
 
 To extract only the Training Data, run:
-``` bash
+``` 
 python data.py
 ```
 
 To extract the Test Data (after the competition), run:
-``` bash
+``` 
 python data.py --test 1
 ```
 
@@ -25,7 +25,7 @@ python data.py --test 1
 The dataset is consists of two CSV-Files
 
 store.csv:
-``` bash
+``` 
 Store - a unique ID for each store 
 StoreType - differentiates between 4 different store models: a, b, c, d
 Assortment - describes an assortment level: a = basic, b = extra, c = extended
@@ -39,7 +39,7 @@ PromoInterval - describes the consecutive intervals Promo2 is started, naming th
 ``` 
 
 train.csv:
-``` bash
+``` 
 Store - a unique ID for each store
 Date - date
 DayOfWeek - Day of the week
