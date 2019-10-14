@@ -14,6 +14,7 @@ store = pd.read_csv('data/store.csv', low_memory=False)
 test = pd.merge(store, test, on='Store')
 test = hlp.date_convert(test)
 
+
 test = hlp.CompYear(test)
 test = hlp.CompAct(test)
 test = hlp.PromoDur(test)
@@ -27,6 +28,7 @@ test = hlp.MeanSales(test, type='Test')
 
 test.to_csv('data/CleanTestData.csv')
 
+test = test.loc[test.Sales!= 0]
 cols = list(test.columns.values) #Make a list of all of the columns in the df
 cols.pop(cols.index('Sales')) #Remove sales from list
 test = test[cols + ['Sales']] #Create new dataframe with sales right at the end
@@ -45,13 +47,13 @@ final_test_preds = xgb_model.predict(X)
 EPSILON = 1e-10
 
 def rmspe(actual: np.ndarray, predicted: np.ndarray):
-    return np.sqrt(np.mean(np.square((actual - predicted) / (actual + EPSILON))))
+    return np.sqrt(np.mean(np.square((actual - predicted) / (actual))))
 
 def adam_metric(actual: np.ndarray, predicted: np.ndarray):
-    preds = predicted.reshape(-1)
-    actuals = actual.reshape(-1)
-    assert preds.shape == actuals.shape
-    return 100 * np.linalg.norm((actuals - preds) / (actuals + 1e-9)) / np.sqrt(preds.shape[0])
+    #preds = predicted.reshape(-1)
+    #actuals = actual.reshape(-1)
+    #assert predicted.shape == actuals.shape
+    return 100 * np.linalg.norm((actual - predicted) / (actual)) / np.sqrt(predicted.shape[0])
 
 print("RMSPE (test): %f" %(rmspe(y, final_test_preds)))
 print("Adam's metric (test): %f" %(adam_metric(y, final_test_preds)))

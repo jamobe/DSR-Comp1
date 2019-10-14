@@ -11,8 +11,7 @@ from bayes_opt import BayesianOptimization
 import pickle
 
 df = pd.read_csv('data/CleanTrainData.csv',index_col=0)
-#Val = pd.read_csv('CheckValData.csv')
-#Test = pd.read_csv('CheckTestData.csv')
+df = df[(df.Sales != 0).any()]
 
 # Create X_train, y_train and so on
 # XGB
@@ -40,7 +39,7 @@ params = {"objective":"reg:squarederror", #type of regressor, shouldnt change
             'learning_rate': 0.05, #step size shrinkage used to prevent overfitting. Range is [0,1]
             'max_depth': 5, #determines how deeply each tree is allowed to grow during any boosting round. keep this low! this will blow up our variance if high
             'lambda': 4.655, #L1 regularization on leaf weights. A large valupythone leads to more regularization. Could consider l2 euclidiean regularisation
-            'n_estimators': 1250, #number of trees you want to build.
+            'n_estimators': 1250, #number of trees you want to build. 1250
             'n_jobs': 4,#should optimise core usage on pc
             'subsample':0.86}
 
@@ -74,7 +73,7 @@ xgb_bo = BayesianOptimization(xgb_evaluate, {'max_depth': (3, 5),
 
 # Use the expected improvement acquisition function to handle negative numbers
 # Optimally needs quite a few more initiation points and number of iterations
-xgb_bo.maximize(init_points=10, n_iter=3, acq='ei')
+xgb_bo.maximize(init_points=10, n_iter=3, acq='ei') #init_points=10
 #extract best parameters from model
 params1 = xgb_bo.max['params']
 print (params1)
@@ -90,6 +89,14 @@ EPSILON = 1e-10
 
 def rmspe(actual: np.ndarray, predicted: np.ndarray):
     return np.sqrt(np.mean(np.square((actual - predicted) / actual)))
+
+def adam_metric(actual: np.ndarray, predicted: np.ndarray):
+    #preds = predicted.reshape(-1)
+    #actuals = actual.reshape(-1)
+    #assert predicted.shape == actuals.shape
+    return 100 * np.linalg.norm((actual - predicted) / (actual)) / np.sqrt(predicted.shape[0])
+
+
 
 print("RMSE train: %f" % rmspe(y_train, train_preds1))
 print("RMSE CV: %f" % rmspe(y_val, val_preds1))
