@@ -22,5 +22,6 @@ df.dropna(axis=0, how='any', subset=['Sales', 'Open', 'StateHoliday', 'SchoolHol
 df['CompetitionDays'].fillna(0, inplace=True)
 
 df = hlp.MeanSales(df, type='Train')
+df.drop({'StoreType', 'Assortment','StateHoliday', 'StoreInfo'}, axis=1, inplace=True)
 
 df.to_csv('data/CleanTrainData.csv')

@@ -11,7 +11,7 @@ from bayes_opt import BayesianOptimization
 import pickle
 
 df = pd.read_csv('data/CleanTrainData.csv',index_col=0)
-df = df[(df.Sales != 0).any()]
+df = df.loc[df.Sales!= 0]
 
 # Create X_train, y_train and so on
 # XGB
@@ -96,14 +96,14 @@ def adam_metric(actual: np.ndarray, predicted: np.ndarray):
     #assert predicted.shape == actuals.shape
     return 100 * np.linalg.norm((actual - predicted) / (actual)) / np.sqrt(predicted.shape[0])
 
-
-
 print("RMSE train: %f" % rmspe(y_train, train_preds1))
 print("RMSE CV: %f" % rmspe(y_val, val_preds1))
+print("Adam's metric (train): %f" %(adam_metric(y_train, train_preds1)))
+print("Adam's metric (CV): %f" %(adam_metric(y_val, val_preds1)))
 
-with open('traindata/params.txt','w') as f:
+with open('traindata/params2.txt','w') as f:
     f.write(str(params1))
     f.close()
 
 # save model to file
-pickle.dump(xg_reg2, open("traindata/xgb_model.pickle.dat", "wb"))
+pickle.dump(xg_reg2, open("traindata/xgb_model.pickle2.dat", "wb"))
