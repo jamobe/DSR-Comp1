@@ -119,6 +119,11 @@ def adam_metric(actual: np.ndarray, predicted: np.ndarray):
     #assert predicted.shape == actuals.shape
     return 100 * np.linalg.norm((actual - predicted) / actual) / np.sqrt(predicted.shape[0])
 
+def onehotencoding(Train):
+    cols = Train.select_dtypes(include='object').columns.tolist()
+    Train = pd.get_dummies(Train, prefix=cols)
+    return Train
+
 '''def one_hot_enc(Train):
     # OHE
 

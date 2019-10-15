@@ -5,7 +5,7 @@ from datetime import timedelta
 from bayes_opt import BayesianOptimization
 import pickle
 
-df = pd.read_csv('data/CleanTrainData.csv',index_col=0)
+df = pd.read_csv('data/CleanTrainData_ohe.csv',index_col=0)
 df = df.loc[df.Sales != 0]
 
 # Separate the 'Sale'-Column from the remaining Columns
@@ -86,14 +86,12 @@ val_preds1 = xg_reg2.predict(X_val)
 
 EPSILON = 1e-10
 
-
-
-with open('traindata/params.txt','w') as f:
+with open('traindata/params_ohe.txt','w') as f:
     f.write(str(params1))
     f.close()
 
 # save model to file
-pickle.dump(xg_reg2, open("traindata/xgb_model.pickle.dat", "wb"))
+pickle.dump(xg_reg2, open("traindata/xgb_model_ohe.pickle.dat", "wb"))
 
 print("RMSE train: %f" % hlp.rmspe(y_train, train_preds1))
 print("RMSE CV: %f" % hlp.rmspe(y_val, val_preds1))

@@ -1,11 +1,10 @@
 import ast
 import helper as hlp
 import pandas as pd
-import numpy as np
 import xgboost as xgb
 import pickle
 
-with open("traindata/params.txt", "r") as data:
+with open("traindata/params_ohe.txt", "r") as data:
     dictionary = ast.literal_eval(data.read())
 
 test = pd.read_csv('data/test.csv', low_memory=False)
@@ -25,9 +24,10 @@ test.dropna(axis=0, how='any', subset=['Sales', 'Open', 'StateHoliday', 'SchoolH
 test['CompetitionDays'].fillna(0, inplace=True)
 
 test = hlp.MeanSales(test, type='Test')
-test.drop({'StoreType', 'Assortment','StateHoliday', 'StoreInfo'}, axis=1, inplace=True)
+test = hlp.onehotencoding(test)
+#test.drop({'StoreType', 'Assortment','StateHoliday', 'StoreInfo'}, axis=1, inplace=True)
 
-test.to_csv('data/CleanTestData.csv')
+test.to_csv('data/CleanTestData_ohe.csv')
 
 test = test.loc[test.Sales!= 0]
 cols = list(test.columns.values) #Make a list of all of the columns in the df
@@ -35,7 +35,7 @@ cols.pop(cols.index('Sales')) #Remove sales from list
 test = test[cols + ['Sales']] #Create new dataframe with sales right at the end
 X, y = test.iloc[:, :-1],test.iloc[:, -1]
 
-xgb_model = pickle.load(open("traindata/xgb_model.pickle.dat", "rb"))
+xgb_model = pickle.load(open("traindata/xgb_model_ohe.pickle.dat", "rb"))
 df_DM = xgb.DMatrix(data=X, label=y)
 params1 = dictionary
 #xg_reg2 = xgb.XGBRegressor(**params1, n_estimators=500)
