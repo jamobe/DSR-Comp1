@@ -101,9 +101,9 @@ print("RMSE CV: %f" % rmspe(y_val, val_preds1))
 print("Adam's metric (train): %f" %(adam_metric(y_train, train_preds1)))
 print("Adam's metric (CV): %f" %(adam_metric(y_val, val_preds1)))
 
-with open('traindata/params2.txt','w') as f:
+with open('traindata/params.txt','w') as f:
     f.write(str(params1))
     f.close()
 
 # save model to file
-pickle.dump(xg_reg2, open("traindata/xgb_model.pickle2.dat", "wb"))
+pickle.dump(xg_reg2, open("traindata/xgb_model.pickle.dat", "wb"))
