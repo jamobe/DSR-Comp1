@@ -2,8 +2,6 @@ from datetime import date, datetime
 import numpy as np
 import pandas as pd
 import datetime as dt
-import pickle
-from sklearn.preprocessing import OneHotEncoder
 
 # Creates extra Columns: Year, Month, Week, Weekday, Day
 def date_convert(df):
@@ -111,6 +109,15 @@ def MeanSales(df, type='Train'):
         df.loc[df['Rel'].isnull(), 'ExpectedSales'] = float(global_sale)
 
     return df
+
+def rmspe(actual: np.ndarray, predicted: np.ndarray):
+    return np.sqrt(np.mean(np.square((actual - predicted) / actual)))
+
+def adam_metric(actual: np.ndarray, predicted: np.ndarray):
+    #preds = predicted.reshape(-1)
+    #actuals = actual.reshape(-1)
+    #assert predicted.shape == actuals.shape
+    return 100 * np.linalg.norm((actual - predicted) / actual) / np.sqrt(predicted.shape[0])
 
 '''def one_hot_enc(Train):
     # OHE

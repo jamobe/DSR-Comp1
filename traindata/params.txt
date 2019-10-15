@@ -1,1 +1,1 @@
-{'colsample_bytree': 0.5022483405143312, 'lambd': 0.7979225880678548, 'max_depth': 4, 'subsample': 0.8002657603008266}
+{'colsample_bytree': 0.6606475788364157, 'lambd': 0.612815822115394, 'max_depth': 4, 'subsample': 0.9065791320515738}

@@ -5,7 +5,7 @@ import numpy as np
 import xgboost as xgb
 import pickle
 
-with open("traindata/params2.txt", "r") as data:
+with open("traindata/params.txt", "r") as data:
     dictionary = ast.literal_eval(data.read())
 
 test = pd.read_csv('data/test.csv', low_memory=False)
@@ -44,17 +44,7 @@ final_test_preds = xgb_model.predict(X)
 
 #####calculate test statistics
 
-
 EPSILON = 1e-10
 
-def rmspe(actual: np.ndarray, predicted: np.ndarray):
-    return np.sqrt(np.mean(np.square((actual - predicted) / (actual))))
-
-def adam_metric(actual: np.ndarray, predicted: np.ndarray):
-    #preds = predicted.reshape(-1)
-    #actuals = actual.reshape(-1)
-    #assert predicted.shape == actuals.shape
-    return 100 * np.linalg.norm((actual - predicted) / (actual)) / np.sqrt(predicted.shape[0])
-
-print("RMSPE (test): %f" %(rmspe(y, final_test_preds)))
-print("Adam's metric (test): %f" %(adam_metric(y, final_test_preds)))
+print("RMSPE (test): %f" %(hlp.rmspe(y, final_test_preds)))
+print("Adam's metric (test): %f" %(hlp.adam_metric(y, final_test_preds)))
