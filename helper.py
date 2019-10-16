@@ -2,6 +2,7 @@ from datetime import date, datetime
 import numpy as np
 import pandas as pd
 import datetime as dt
+import xgboost as xgb
 
 # Creates extra Columns: Year, Month, Week, Weekday, Day
 def date_convert(df):
@@ -114,57 +115,9 @@ def rmspe(actual: np.ndarray, predicted: np.ndarray):
     return np.sqrt(np.mean(np.square((actual - predicted) / actual)))
 
 def adam_metric(actual: np.ndarray, predicted: np.ndarray):
-    #preds = predicted.reshape(-1)
-    #actuals = actual.reshape(-1)
-    #assert predicted.shape == actuals.shape
     return 100 * np.linalg.norm((actual - predicted) / actual) / np.sqrt(predicted.shape[0])
 
 def onehotencoding(Train):
     cols = Train.select_dtypes(include='object').columns.tolist()
     Train = pd.get_dummies(Train, prefix=cols)
     return Train
-
-'''def one_hot_enc(Train):
-    # OHE
-
-    cols = Train.select_dtypes(include='object').columns.tolist()
-    for col in cols:
-        Train[col] = Train[col].astype(str)
-    ohe = OneHotEncoder(handle_unknown='ignore')
-
-    ohe_train = pd.DataFrame()
-
-    for col in cols:
-        ohe.fit(np.array(Train[col]).reshape(-1, 1))
-        pickle.dump(ohe, open('traindata/ohe_' + col, "wb"))
-        ohe_train_tmp = pd.DataFrame(columns=ohe.categories_, data=ohe.transform(np.array(Train[col]).reshape(-1, 1)).toarray())
-        ohe_train = pd.concat([ohe_train, ohe_train_tmp], axis=1)
-
-    # Drop columns
-    #Train.drop(axis=1, labels=cols, inplace=True)
-
-    # Concat
-    Train = pd.concat([Train.reset_index(), ohe_train], axis=1)
-
-    return Train
-
-
-def one_hot_enc_test(Test):
-    # OHE
-    cols = Test.select_dtypes(include='object').columns.tolist()
-    for col in cols:
-        Test[col] = Test[col].astype(str)
-
-    ohe_test = pd.DataFrame()
-
-    for col in cols:
-        ohe = pickle.load(open('traindata/ohe_' + col, "rb"))
-        ohe_test_tmp = pd.DataFrame(columns=ohe.categories_, data=ohe.transform(np.array(Test[col]).reshape(-1, 1)).toarray())
-        ohe_test = pd.concat([ohe_test, ohe_test_tmp], axis=1)
-
-    # Drop columns
-    #Test.drop(axis=1, labels=cols, inplace=True)
-
-    # Concat
-    Test = pd.concat([Test.reset_index(), ohe_test], axis=1)
-    return Test'''

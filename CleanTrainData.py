@@ -24,6 +24,5 @@ df['CompetitionDays'].fillna(0, inplace=True)
 
 df = hlp.MeanSales(df, type='Train')
 df = hlp.onehotencoding(df)
-#df.drop({'StoreType', 'Assortment','StateHoliday', 'StoreInfo'}, axis=1, inplace=True)
 
 df.to_csv('data/CleanTrainData_ohe.csv')

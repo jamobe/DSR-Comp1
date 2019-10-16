@@ -1,13 +1,15 @@
-import pandas as pd
 import helper as hlp
+import pandas as pd
 import xgboost as xgb
 from datetime import timedelta
 from bayes_opt import BayesianOptimization
 import pickle
 
+################# Loading the cleaned Training Data ################################
 df = pd.read_csv('data/CleanTrainData_ohe.csv',index_col=0)
 df = df.loc[df.Sales != 0]
 
+################# Splitting the data in Train and Validation Sets ################################
 # Separate the 'Sale'-Column from the remaining Columns
 df.loc[:, 'Date'] = pd.to_datetime(df['Date'])
 cols = list(df.columns.values)
@@ -20,80 +22,89 @@ date_range_days=(df.Date.max() - df.Date.min()).days
 split_date=df.Date.min() + timedelta(date_range_days*0.8)
 df_early,df_later = df.loc[df.Date <= split_date], df.loc[df.Date > split_date]
 
+################# Remove Datetime-Format Columns ################################
 # Remove Date-Column, since Datetime-Format is not accepted by XGBoost
 df_early.drop({'Date'}, axis=1, inplace=True)
 df_later.drop({'Date'}, axis=1, inplace=True)
 
-# Create X-FeatureMatrix and Y-PredictorVector
+################# Create X-FeatureMatrix and Y-PredictorVector ################################
 X_train, X_val, y_train, y_val = df_early.iloc[:,:-1], df_later.iloc[:,:-1], df_early.iloc[:,-1], df_later.iloc[:,-1]
 
-# Creating XGB optimised data structure
+################# Defining the hyper parameter ################################
+params = {
+# Learning Task Parameters
+    'objective': 'reg:squarederror',
+    'eval_metric':'rmse', # Evaluation metrics for validation data
+# Parameters for Tree Booster
+    'learning_rate': 0.05, # Learning Rate: step size shrinkage used to prevent overfitting.
+# Paramters for XGB ScikitLearn API
+    'n_jobs': 4, # Number of parallel threads used to run xgboost
+    'n_estimators': 1000, # number of trees you want to build
+    'verbosity': 2, # degree of verbosity: 0 (silent) - 3 (debug)
+    'max_depth': 4,
+    'reg_lambda': 1,
+    'colsample_bytree': 0.5,
+    'subsample': 0.9
+}
+
+################# Defining the fit parameters ################################
+fit_params = {
+            'eval_metric':'rmse',
+            'early_stopping_rounds': 10,
+            'eval_set': [(X_val, y_val)],
+            }
+
+################# Initiate XGB regressor and run initial fit ################################
+xgb_reg = xgb.XGBRegressor(**params)
+xgb_reg.fit(X_train, y_train, **fit_params)
+
+################# Create XGB DMatrix for xgb.cv Function ################################
 df_DM = xgb.DMatrix(data=X_train, label=y_train)
 
-# Define initial hyper parameter
-params = {"objective":"reg:squarederror", #type of regressor, shouldnt change
-           'colsample_bytree': 0.627, #percentage of features used per tree. High value can lead to overfitting.
-            'learning_rate': 0.05, #step size shrinkage used to prevent overfitting. Range is [0,1]
-            'max_depth': 5, #determines how deeply each tree is allowed to grow during any boosting round. keep this low! this will blow up our variance if high
-            'lambda': 4.655, #L1 regularization on leaf weights. A large valupythone leads to more regularization. Could consider l2 euclidiean regularisation
-            'n_estimators': 1250, #number of trees you want to build. 1250
-            'n_jobs': 4,#should optimise core usage on pc
-            'subsample':0.86}
+################# Creating an evaluation function to be optimized ################################
+def xgb_evaluate(max_depth, reg_lambda, colsample_bytree, subsample):
+    params1 = {
+        'colsample_bytree': colsample_bytree,
+        'max_depth': int(round(max_depth)),  # Maximum depth of a tree: high value -> prone to overfitting
+        'reg_lambda': reg_lambda,  # L2 regularization term on weights
+        'subsample': subsample
+    }
+    cv_result = xgb.cv(dtrain=df_DM,
+                        params=params1,
+                        early_stopping_rounds=10,
+                        num_boost_round=100,
+                        metrics='rmse')
+    return -cv_result['test-rmse-mean'].iloc[-1]
 
-# Initiate XGB regressor by calling XGB regressor CLASS from the XGBoost library (give hyper parameter as arguments)
-xg_reg = xgb.XGBRegressor(**params)
+################# Using BayesOptimization for evaluation function ################################
+optimizer = BayesianOptimization(xgb_evaluate, {'max_depth': (3, 5),
+                                                    'reg_lambda': (0, 5),
+                                                    'colsample_bytree': (0.3, 0.8),
+                                                    'subsample': (0.8, 1)})
 
-#Fit the regressor to the training set and make predictions for the test set using .fit() and .predict() methods
-xg_reg.fit(X_train, y_train)
-preds = xg_reg.predict(X_val)
-preds_train = xg_reg.predict(X_train)
+################# calculate maximum of Bayes optimization ################################
+optimizer.maximize(init_points=10, n_iter=10)
+# n_iter: How many steps of bayesian optimization you want to perform. The more steps the more likely to find a good maximum you are.
+# init_points: How many steps of random exploration you want to perform. Random exploration can help by diversifying the exploration space.
 
-def xgb_evaluate(max_depth, lambd, colsample_bytree, subsample):
-    params1 = {'objective': 'reg:squarederror',
-               'silent': False,
-               'max_depth': int(max_depth),
-               'learning_rate': 0.05,
-               'lambda': lambd,
-               'subsample': subsample,
-               'colsample_bytree': colsample_bytree,
-               'n_estimators': 100,
-               'n_jobs': 4}
-    # Used around 1000 boosting rounds in the full model
-    cv_result = xgb.cv(dtrain=df_DM, params=params1, num_boost_round=125, nfold=3, metrics='rmse', seed=42)
-    # Bayesian optimization only knows how to maximize, not minimize, so return the negative RMSE
-    return -1.0 * cv_result['test-rmse-mean'].iloc[-1]
+################# retrieving optimized parameters ################################
+params1 = optimizer.max['params']
+params1['max_depth']= int(round(params1['max_depth']))
+params.update(params1)
 
+################# Run model with optimized parameters ################################
+xgb_reg = xgb.XGBRegressor(**params)
+xgb_reg.fit(X_train, y_train, **fit_params)
 
-xgb_bo = BayesianOptimization(xgb_evaluate, {'max_depth': (3, 5),
-                                                 'lambd': (0, 5),
-                                                 'colsample_bytree': (0.3, 0.8),
-                                                'subsample': (0.8,1)})
+################# prediction for Train and Validation set ################################
+train_preds = xgb_reg.predict(X_train)
+val_preds = xgb_reg.predict(X_val)
 
+################# Print metrics for Train and Validation set prediction ################################
+print("RMSE train: %f" % hlp.rmspe(y_train, train_preds))
+print("RMSE CV: %f" % hlp.rmspe(y_val, val_preds))
+print("Adam's metric (train): %f" %(hlp.adam_metric(y_train, train_preds)))
+print("Adam's metric (CV): %f" %(hlp.adam_metric(y_val, val_preds)))
 
-# Use the expected improvement acquisition function to handle negative numbers
-# Optimally needs quite a few more initiation points and number of iterations
-xgb_bo.maximize(init_points=10, n_iter=3, acq='ei') #init_points=10
-#extract best parameters from model
-params1 = xgb_bo.max['params']
-print (params1)
-#Converting the max_depth and from float to int
-params1['max_depth']= int(params1['max_depth'])
-
-xg_reg2 = xgb.XGBRegressor(**params1,n_estimators=500)
-xg_reg2.fit(X_train, y_train)
-train_preds1 = xg_reg2.predict(X_train)
-val_preds1 = xg_reg2.predict(X_val)
-
-EPSILON = 1e-10
-
-with open('traindata/params_ohe.txt','w') as f:
-    f.write(str(params1))
-    f.close()
-
-# save model to file
-pickle.dump(xg_reg2, open("traindata/xgb_model_ohe.pickle.dat", "wb"))
-
-print("RMSE train: %f" % hlp.rmspe(y_train, train_preds1))
-print("RMSE CV: %f" % hlp.rmspe(y_val, val_preds1))
-print("Adam's metric (train): %f" %(hlp.adam_metric(y_train, train_preds1)))
-print("Adam's metric (CV): %f" %(hlp.adam_metric(y_val, val_preds1)))
+################# save model to file  ################################
+pickle.dump(xgb_reg, open("traindata/xgb_model_ohe.pickle.dat", "wb"))
