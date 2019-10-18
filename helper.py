@@ -41,7 +41,7 @@ def CompAct(df):
     df['CompetitionDays'] = (df['Date'] - df['CompetitionStart'])/np.timedelta64(1,'D')
     return df
 
-# Create of additional column: 'PromoDuration' -> how long is the Promotion running
+# Create additional column: 'PromoDuration' -> how long is the Promotion running
 def PromoDur(df):
     # Convert Promoyear and Promoweekno to datetime format
     df_subset = df.loc[(~df['Promo2SinceYear'].isnull()) & (~df['Promo2SinceWeek'].isnull()), ['Promo2SinceYear','Promo2SinceWeek']]
@@ -53,7 +53,7 @@ def PromoDur(df):
     df['PromoDuration'].fillna(0, inplace=True)
     return df
 
-# Create RunnningAnyPromo Column
+# Create additional column: 'RunningAnyPromo' -> binary column representing if Promo1 or Promo2 is running on the Date
 def RunAnyPromo(df):
     df['RunningAnyPromo'] = 0
     months_abbr = []
@@ -66,6 +66,7 @@ def RunAnyPromo(df):
         df.loc[mask, 'RunningAnyPromo'] = 1
     return df
 
+# Create additional column: 'RunPromo' -> binary column representing if Promo2 is running on the Date
 def RunPromo(df):
     # Sets RunningPromo to 1 if Months in Substring of PromoIntervall and current month match
     df['RunningPromo2'] = 0
@@ -78,28 +79,33 @@ def RunPromo(df):
         df.loc[mask, 'RunningPromo2'] = 1
     return df
 
+# Data imputation of the 'Customer' column: if Store is open, Customer is set to mean(Customer) else 0
 def CustImput(df):
     # Replace NaN in Customers with Mean(Customers), but if Store not open set Customers to 0
     df['Customers'].fillna(df['Customers'].mean(), inplace=True)
     df.loc[df['Open'] == 0, 'Customers'] = 0
     return df
 
-# calculate mean sales per number of customers per each store type
+# Create new columns: Rel (Relative Sales), ExpectedSales
 def MeanSales(df, type='Train'):
+    # Create new column: StoreInfo -> combination of StoreType and Assortment
     df['StoreInfo'] = df['Assortment'] + df['StoreType']
     df['Rel'] = np.nan
     df['ExpectedSales'] = np.nan
     if type == 'Train':
+        # Calculate the mean Sales dependent on the StoreInfo normalized by the Customers
         mean_sales = df.loc[df.Sales > 0, ['Sales', 'Customers', 'StoreInfo']].groupby('StoreInfo').mean()
         mean_sales['Rel'] = mean_sales['Sales'] / mean_sales['Customers']
         b = mean_sales['Rel'].to_dict()
         df['Rel'] = df['StoreInfo'].map(b)
         mean_sales['Rel'].to_csv('traindata/MeanSales.csv', header=False)
+        # calculate the expected sales from the sales normalized by the customers
         df['ExpectedSales'] = df['Customers'] * df['Rel']
         global_sales = np.mean(df['Sales'] / df['Customers'])
         with open('traindata/global_sales.txt', 'w') as f:
             f.write(str(global_sales))
     else:
+        # in the case of the Test set, there will be no Sales column available -> the relative sales are retrieved from the training set
         b = pd.read_csv('traindata/MeanSales.csv', header=None, names=['keys', 'values'])
         mydict = dict(zip(b['keys'], b['values']))
         df['Rel'] = df['StoreInfo'].map(mydict)
@@ -110,12 +116,15 @@ def MeanSales(df, type='Train'):
 
     return df
 
+# Root Mean Square Percentage Error  metric
 def rmspe(actual: np.ndarray, predicted: np.ndarray):
     return np.sqrt(np.mean(np.square((actual - predicted) / actual)))
 
+# Metric defined by Adam
 def adam_metric(actual: np.ndarray, predicted: np.ndarray):
     return 100 * np.linalg.norm((actual - predicted) / actual) / np.sqrt(predicted.shape[0])
 
+# one hot encoding
 def onehotencoding(Train):
     cols = Train.select_dtypes(include='object').columns.tolist()
     Train = pd.get_dummies(Train, prefix=cols)
