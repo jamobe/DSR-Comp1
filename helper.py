@@ -4,7 +4,7 @@ import pandas as pd
 import datetime as dt
 import xgboost as xgb
 
-# Creates extra Columns: Year, Month, Week, Weekday, Day
+# Converts 'Date'-column to datetime format and creates extra columns: Year, Month, Week, Weekday, Day
 def date_convert(df):
     if 'Date' in df.columns.tolist():
         df.loc[:, 'Date'] = pd.to_datetime(df['Date'])
@@ -16,8 +16,6 @@ def date_convert(df):
         df['WeekDay'] = df['Date'].dt.weekday
         df['Day'] = df['Date'].dt.day
 
-        # df = df.drop(axis=1, labels='Date')
-
         cols_after = df.columns.tolist()[0:9]
         cols_before = df.columns.tolist()[9:]
         df = df.loc[:, cols_before + cols_after]
@@ -27,7 +25,7 @@ def date_convert(df):
 
     return df
 
-# Convert CompetitionYear and CompetitionMonth to datetime format
+# Converts CompetitionYear and CompetitionMonth to datetime format
 def CompYear(df):
     df['CompetitionStart'] = 'NaT'
     mask = (~df['CompetitionOpenSinceYear'].isnull()) & (~df['CompetitionOpenSinceMonth'].isnull())
@@ -35,7 +33,7 @@ def CompYear(df):
     df['CompetitionStart'] = pd.to_datetime(df['CompetitionStart'])
     return df
 
-# Calculate is Competition is active and how long the competition is active
+# Calculate if Competition is active on the Date and how long the competition is active
 def CompAct(df):
     df['CompetitionActive'] = 0
     df['CompetitionDays'] = 0
@@ -43,6 +41,7 @@ def CompAct(df):
     df['CompetitionDays'] = (df['Date'] - df['CompetitionStart'])/np.timedelta64(1,'D')
     return df
 
+# Create of additional column: 'PromoDuration' -> how long is the Promotion running
 def PromoDur(df):
     # Convert Promoyear and Promoweekno to datetime format
     df_subset = df.loc[(~df['Promo2SinceYear'].isnull()) & (~df['Promo2SinceWeek'].isnull()), ['Promo2SinceYear','Promo2SinceWeek']]
