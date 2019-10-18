@@ -23,7 +23,7 @@ python data.py --test 1
 
 To test the model prediction on the testset, run
 ```
-python predictTest.py
+python PredictTest.py
 ```
 
 ## Data Set
@@ -71,3 +71,17 @@ The team scores will be ranked - the highest score (lowest RMSPE) will receive a
 Each lower score (higher RMSPE) will receive a score of 10-(1 * number in ranking). If they are ranked second, score will be 10-2 = 8.
 
 ## Workflow
+Several 'helper'-functions are collected in:
+```
+helper.py
+```
+
+Cleaning of Training Data is done in: 
+```
+CleanTrainData.py
+```
+
+Training of the XGBoost model is done in:
+```
+RunModel.py
+```
