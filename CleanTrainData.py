@@ -1,6 +1,5 @@
 import helper as hlp
 import pandas as pd
-import numpy as np
 
 # Load data
 store = pd.read_csv('data/store.csv', low_memory=False)
