@@ -5,6 +5,11 @@ import datetime as dt
 
 # Converts 'Date'-column to datetime format and creates extra columns: Year, Month, Week, Weekday, Day
 def date_convert(df):
+    '''
+    Function converts the entries of a 'Date' column to datetime format and creates separate columns for: year, month, week, weekday, day.
+    :param pandas.dataframe:
+    :return pandas.datafram:
+    '''
     if 'Date' in df.columns.tolist():
         df.loc[:, 'Date'] = pd.to_datetime(df['Date'])
 
@@ -26,6 +31,11 @@ def date_convert(df):
 
 # Converts CompetitionYear and CompetitionMonth to datetime format
 def CompYear(df):
+    '''
+    Function combines 'CompetitionYear' and 'CompetitionMonth to new column 'CompetitionStart' in datetime format
+    :param pandas.dataframe:
+    :return pandas.dataframe:
+    '''
     df['CompetitionStart'] = 'NaT'
     mask = (~df['CompetitionOpenSinceYear'].isnull()) & (~df['CompetitionOpenSinceMonth'].isnull())
     df['CompetitionStart'] = df.loc[mask, 'CompetitionOpenSinceYear'].astype(int).astype(str) + '-' + df.loc[mask, 'CompetitionOpenSinceMonth'].astype(int).astype(str) + '-01'
