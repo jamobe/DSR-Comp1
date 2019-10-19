@@ -2,7 +2,6 @@ from datetime import date, datetime
 import numpy as np
 import pandas as pd
 import datetime as dt
-import xgboost as xgb
 
 # Converts 'Date'-column to datetime format and creates extra columns: Year, Month, Week, Weekday, Day
 def date_convert(df):
