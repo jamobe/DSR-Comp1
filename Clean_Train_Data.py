@@ -2,43 +2,43 @@ import pandas as pd
 import helper as hlp
 
 # Load data
-STORE = pd.read_csv('data/store.csv', low_memory=False)
-TRAIN = pd.read_csv('data/train.csv', low_memory=False)
+Store = pd.read_csv('data/store.csv', low_memory=False)
+Train = pd.read_csv('data/train.csv', low_memory=False)
 
 # Merge
-DF = pd.merge(STORE, TRAIN, on='Store')
-DF = hlp.date_convert(DF)
+df = pd.merge(Store, Train, on='Store')
+df = hlp.date_convert(df)
 
 # Data Cleaning
 # Converts CompetitionYear and CompetitionMonth to datetime format
-DF = hlp.CompYear(DF)
+df = hlp.CompYear(df)
 
 # Calculate if Competition is active on the Date and how long the competition is active
-DF = hlp.CompAct(DF)
+df = hlp.CompAct(df)
 
 # Create additional column: 'PromoDuration' -> how long is the Promotion running
-DF = hlp.PromoDur(DF)
+df = hlp.PromoDur(df)
 
 # Create additional column: 'RunningAnyPromo'
 # -> binary column representing if Promo1 or Promo2 is running on the Date
-DF = hlp.RunAnyPromo(DF)
+df = hlp.RunAnyPromo(df)
 
 # Create additional column: 'RunPromo'
 # -> binary column representing if Promo2 is running on the Date
-DF = hlp.RunPromo(DF)
+df = hlp.RunPromo(df)
 
 # Data imputation of the 'Customer' column:
 # if Store is open, Customer is set to mean(Customer) else 0
-DF = hlp.CustImput(DF)
+df = hlp.CustImput(df)
 
-DF.drop({'CompetitionStart', 'CompetitionOpenSinceYear', 'CompetitionOpenSinceMonth',\
+df.drop({'CompetitionStart', 'CompetitionOpenSinceYear', 'CompetitionOpenSinceMonth',\
          'PromoStart', 'PromoInterval', 'Promo', 'Promo2', 'Promo2SinceYear', \
          'Promo2SinceWeek', 'DayOfWeek'}, axis=1, inplace=True)
-DF.dropna(axis=0, how='any', subset=['Sales', 'Open', 'StateHoliday', \
+df.dropna(axis=0, how='any', subset=['Sales', 'Open', 'StateHoliday', \
                                      'SchoolHoliday', 'CompetitionDistance'], inplace=True)
-DF['CompetitionDays'].fillna(0, inplace=True)
+df['CompetitionDays'].fillna(0, inplace=True)
 
-DF = hlp.MeanSales(DF, type='Train')    # Create new columns: Rel (Relative Sales), ExpectedSales
-DF = hlp.onehotencoding(DF)             # one hot encoding
+df = hlp.MeanSales(df, type='Train')    # Create new columns: Rel (Relative Sales), ExpectedSales
+df = hlp.onehotencoding(df)             # one hot encoding
 
-DF.to_csv('data/CleanTrainData_ohe.csv')
+df.to_csv('data/CleanTrainData_ohe.csv')
