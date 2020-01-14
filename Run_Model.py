@@ -29,11 +29,7 @@ def xgb_evaluate(max_depth, reg_lambda, colsample_bytree, subsample):
         'reg_lambda': reg_lambda,  # L2 regularization term on weights
         'subsample': subsample
     }
-    cv_result = xgb.cv(dtrain=df_DM,
-                        params=params1,
-                        early_stopping_rounds=10,
-                        num_boost_round=100,
-                        metrics='rmse')
+    cv_result = xgb.cv(dtrain=df_DM, params=params1, early_stopping_rounds=10, num_boost_round=100, metrics='rmse')
     return -cv_result['test-rmse-mean'].iloc[-1]
 
 
