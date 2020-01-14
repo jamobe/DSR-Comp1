@@ -120,7 +120,7 @@ def customer_imputation(dataframe):
     """
     # Replace NaN in Customers with Mean(Customers), but if Store not open set Customers to 0
     dataframe['Customers'].fillna(dataframe['Customers'].mean(), inplace=True)
-    dataframe.loc[df['Open'] == 0, 'Customers'] = 0
+    dataframe.loc[dataframe['Open'] == 0, 'Customers'] = 0
     return dataframe
 
 
@@ -164,7 +164,7 @@ def calculate_mean_sales(dataframe, data_type='Train'):
         dataframe['ExpectedSales'] = dataframe['Customers'] * dataframe['Rel']
         with open('traindata/global_sales.txt') as f:
             global_sale = f.read()
-        dataframe.loc[df['Rel'].isnull(), 'ExpectedSales'] = float(global_sale)
+        dataframe.loc[dataframe['Rel'].isnull(), 'ExpectedSales'] = float(global_sale)
 
     return dataframe
 
