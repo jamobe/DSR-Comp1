@@ -1,9 +1,21 @@
-# DSR-Comp1
+# Sales Prediction
 First Competition during the Data Science Retreat (9.-11.Oct 2019)
 
 ## Rossman Kaggle Mini-Competition
 
 This mini competition is adapted from the Kaggle Rossman challenge. 
+
+## Task
+The task is to predict the Sales of a given store on a given day.
+Submissions are evaluated on the root mean square percentage error (RMSPE):
+
+![](./assets/rmspe.png)
+
+Zero sales days are ignored in scoring.
+
+The team scores will be ranked - the highest score (lowest RMSPE) will receive a score of 10 for the scoring criteria section.
+
+Each lower score (higher RMSPE) will receive a score of 10-(1 * number in ranking). If they are ranked second, score will be 10-2 = 8.
 
 ## Setup
 To install the necessary packages, run:
@@ -57,18 +69,6 @@ Promo - indicates whether a store is running a promo on that day
 ```
 
 The test period is from 2014-08-01 to 2015-07-31 - the test dataset is the same format as train.csv.
-
-## Task
-The task is to predict the Sales of a given store on a given day.
-Submissions are evaluated on the root mean square percentage error (RMSPE):
-
-![](./assets/rmspe.png)
-
-Zero sales days are ignored in scoring.
-
-The team scores will be ranked - the highest score (lowest RMSPE) will receive a score of 10 for the scoring criteria section.
-
-Each lower score (higher RMSPE) will receive a score of 10-(1 * number in ranking). If they are ranked second, score will be 10-2 = 8.
 
 ## Workflow
 Cleaning of Training Data is done in: 
