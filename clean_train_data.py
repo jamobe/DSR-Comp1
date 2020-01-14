@@ -200,6 +200,18 @@ def onehotencoding(train_df):
     return train_df
 
 
+def move_precition_variable(dataframe):
+    """
+    moves the 'Sale' column to the end of the dataframe
+    :param dataframe:
+    :return:
+    """
+    cols = list(dataframe.columns.values)
+    cols.pop(cols.index('Sales'))
+    dataframe = dataframe[cols + ['Sales']]
+    return dataframe
+
+
 if __name__ == "__main__":
 
     Store = pd.read_csv('data/store.csv', low_memory=False)
@@ -222,5 +234,6 @@ if __name__ == "__main__":
     df = store_info(df)
     df = calculate_mean_sales(df, data_type='Train')
     df = onehotencoding(df)
+    df = move_precition_variable(df)
 
     df.to_csv('data/CleanTrainData_ohe.csv')
