@@ -1,45 +1,37 @@
 import pickle
 import pandas as pd
-import Clean_Train_Data as hlp
+import clean_train_data as hlp
 
 
 if __name__ == "__main__":
-    ################ Loading the test Data ################################
-    test = pd.read_csv('data/test.csv', low_memory=False)
-    store = pd.read_csv('data/store.csv', low_memory=False)
-    test = pd.merge(store, test, on='Store')
-    test = hlp.date_convert(test)
 
-    ################ Performing Data Cleaning and Manipulation ################################
-    test = hlp.CompYear(test)
-    test = hlp.CompAct(test)
-    test = hlp.PromoDur(test)
-    test = hlp.RunAnyPromo(test)
-    test = hlp.RunPromo(test)
-    test = hlp.CustImput(test)
-    test.drop({'Date', 'CompetitionStart', 'CompetitionOpenSinceYear', 'CompetitionOpenSinceMonth', \
-               'PromoStart', 'PromoInterval', 'Promo', 'Promo2', 'Promo2SinceYear', 'Promo2SinceWeek', \
-               'DayOfWeek'}, axis=1, inplace=True)
-    test.dropna(axis=0, how='any', subset=['Sales', 'Open', 'StateHoliday', \
-                                           'SchoolHoliday', 'CompetitionDistance'], inplace=True)
-    test['CompetitionDays'].fillna(0, inplace=True)
-    test = hlp.MeanSales(test, type='test')
-    test = hlp.onehotencoding(test)
+    Test = pd.read_csv('data/test.csv', low_memory=False)
+    Store = pd.read_csv('data/store.csv', low_memory=False)
 
-    ################ Write cleaned test set to a file ################################
-    test.to_csv('data/CleantestData_ohe.csv')
+    test_df = pd.merge(Store, Test, on='Store')
+    test_df = hlp.date_convert(test_df)
+    test_df = hlp.competition_start(test_df)
+    test_df = hlp.competition_active(test_df)
+    test_df = hlp.promo_duration(test_df)
+    test_df = hlp.run_any_promotion(test_df)
+    test_df = hlp.run_promo2(test_df)
+    test_df = hlp.customer_imputation(test_df)
+    test_df.drop({'Date', 'CompetitionStart', 'CompetitionOpenSinceYear', 'CompetitionOpenSinceMonth', 'PromoStart',
+                  'PromoInterval', 'Promo', 'Promo2', 'Promo2SinceYear', 'Promo2SinceWeek', 'DayOfWeek'},
+                 axis=1, inplace=True)
+    test_df.dropna(axis=0, how='any', subset=['Sales', 'Open', 'StateHoliday', 'SchoolHoliday', 'CompetitionDistance'],
+                   inplace=True)
+    test_df['CompetitionDays'].fillna(0, inplace=True)
+    test_df = hlp.store_info(test_df)
+    test_df = hlp.calculate_mean_sales(test_df, data_type='test')
+    test_df = hlp.onehotencoding(test_df)
+    test_df = hlp.move_precition_variable(test_df)
+    test_df.to_csv('data/CleantestData_ohe.csv')
+    test_df = test_df.loc[test_df.Sales != 0]
+    X, Y = test_df.iloc[:, :-1], test_df.iloc[:, -1]
 
-    ################# Separating the Sales column from the test set ################################
-    test = test.loc[test.Sales != 0]
-    cols = list(test.columns.values) #Make a list of all of the columns in the df
-    cols.pop(cols.index('Sales')) #Remove sales from list
-    test = test[cols + ['Sales']] #Create new dataframe with sales right at the end
-    X, Y = test.iloc[:, :-1], test.iloc[:, -1]
-
-    ################# Load the trained model and predict test set ################################
     XGB_MODEL = pickle.load(open("traindata/xgb_model_ohe.pickle.dat", "rb"))
     test_preds = XGB_MODEL.predict(X)
 
-    ################# Calculate test statistics ################################
-    print("RMSPE (test): %f" %(hlp.rmspe(Y, test_preds)))
-    print("Adam's metric (test): %f" %(hlp.adam_metric(Y, test_preds)))
+    print("RMSPE (test): %f" % hlp.rmspe(Y, test_preds))
+    print("Adam's metric (test): %f" % hlp.adam_metric(Y, test_preds))
